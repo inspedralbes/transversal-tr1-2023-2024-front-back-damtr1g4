@@ -2,6 +2,8 @@
 const mysql = require('mysql2');
 const express = require('express');
 const app = express();
+const fs = require('fs');
+const path = require('path');
 const bodyParser = require('body-parser');
 var cors = require("cors");
 const PORT = 3001;
@@ -18,7 +20,7 @@ const pool = mysql.createPool({
     database: "a22polazasot_baseTienda"
 });
 //Conexion con la base de datos
-function getConnection() {
+function GetConnection() {
     return new Promise((resolve, reject) => {
         pool.getConnection((err, connection) => {
             if (err) {
@@ -29,12 +31,30 @@ function getConnection() {
         });
     });
 }
-//Realizamos inserts de los productos
-function insert(nombre, precio, descripcion, disponibilidad, tipo_id, tienda_id, fotos) {
+//Usuarios
+function GetUsuarios() {
     return new Promise(async(resolve, reject) => {
-        const connection = await getConnection();
-        var sql = "INSERT INTO productes (nombre, precio, descripcion, disponibilidad, tipo_id, tienda_id, fotos) VALUES (?, ?, ?, ?, ?, ?, ?)"
-        connection.execute(sql, [nombre, precio, descripcion, disponibilidad, tipo_id, tienda_id, fotos], function (err, result) {
+        const connection = await GetConnection();
+        var sql = "SELECT nom_usuari, contrasenya FROM usuaris;";
+        connection.execute(sql, function (err, result) {
+            
+            if (err) {
+                reject(err);
+            }
+            else {
+                connection.release();
+                resolve(result);
+            }
+
+        });
+    });
+}
+//Realizamos inserts de los productos
+function InsertProducts(nombre, precio, descripcion, tipo_id, tienda_id, fotos, stock) {
+    return new Promise(async(resolve, reject) => {
+        const connection = await GetConnection();
+        var sql = "INSERT INTO productes (nombre, precio, descripcion, tipo_id, tienda_id, fotos, stock) VALUES ('"+nombre+"', "+precio+", '"+descripcion+"', "+tipo_id+", "+tienda_id+", '"+fotos+"', "+stock+");";
+        connection.execute(sql, function (err, result) {
             if (err) {
                 reject(err);
             }
@@ -47,10 +67,10 @@ function insert(nombre, precio, descripcion, disponibilidad, tipo_id, tienda_id,
     });
 }
 //Realizamos updates de los productes con su id
-function update(id, nombre, precio, descripcion, disponibilidad, tipo_id, tienda_id, fotos){
+function UpdateProducts(id, nombre, precio, descripcion, tipo_id, tienda_id, fotos, stock) {
     return new Promise(async(resolve, reject) => {
-        const connection = await getConnection();
-        var sql = "UPDATE productes SET nombre = '"+nombre+"', precio = "+precio+", descripcion = '"+descripcion+"', disponibilidad = "+disponibilidad+", tipo_id = "+tipo_id+", tienda_id = "+tienda_id+", fotos = '"+fotos+"' WHERE id = "+id+";";
+        const connection = await GetConnection();
+        var sql = "UPDATE productes SET nombre = '"+nombre+"', precio = "+precio+", descripcion = '"+descripcion+"', tipo_id = "+tipo_id+", tienda_id = "+tienda_id+", fotos = '"+fotos+"', stock = "+stock+" WHERE id = "+id+";";
         connection.execute(sql, function (err, result) {
             if (err) {
                 reject(err);
@@ -64,9 +84,9 @@ function update(id, nombre, precio, descripcion, disponibilidad, tipo_id, tienda
     });
 }
 //Consulta para recoger todos los datos
-function queries() {
+function GetProducts() {
     return new Promise(async(resolve, reject) => {
-        const connection = await getConnection();
+        const connection = await GetConnection();
         var sql = "SELECT * FROM productes;";
         connection.execute(sql, function (err, result) {
             
@@ -82,9 +102,25 @@ function queries() {
     });
 
 }
-function deleteProduct(id){
+//Consulta para recoger los tipos de productos
+function GetTipos(){
     return new Promise(async(resolve, reject) => {
-        const connection = await getConnection();
+        const connection = await GetConnection();
+        var sql = "SELECT * FROM tipos;"
+        connection.execute(sql, function (err, result) {
+            if(err){
+                console.log(err);
+            }
+            else{
+                connection.release();
+                resolve(result);
+            }
+        });
+    })
+}
+function DeleteProduct(id) {
+    return new Promise(async(resolve, reject) => {
+        const connection = await GetConnection();
         var sql = "DELETE FROM productes WHERE id = "+id+";";
         connection.execute(sql, function (err, result) {
             if (err) {
@@ -109,13 +145,69 @@ process.on('SIGINT', () => {
         process.exit();
     });
 });
+//Recogemos la imagen que se añade del producto nuevo y la almacenamos en un fichero
+function saveImage(fotos){
+    const nombreArchivo = path.basename(fotos);
+    const subdirectori = "Images";
+    const directori = path.join(__dirname, subdirectori);
+    fs.mkdir(directori, (error) => {
+        if (error) {
+            console.error(error);
+        } else {
+            console.log('Directorio creado con éxito');
+        }
+    });
+    const ruta = path.join(directori,nombreArchivo);
+    fs.copyFile(nombreArchivo,ruta,(err) => {
+        if(err){
+            console.log(err.message);
+        }
+        else{
+            console.log("Saved image");
+        }
+    });
+    
+}
+function deleteImage(fotos){
+
+}
 //Conexcion con el servidor
 app.listen(PORT, () => {
     console.log("Server  =>" + PORT);
 });
+//Verificamos que el usuario este en la base de datos y devolvemos un booleano en formato Json
+app.post("/verify/:nom_usuari/:contrasenya",(req, res) =>{
+    const {nom_usuari, contrasenya} = req.params;
+    let verify = false;
+    GetUsuarios()
+    .then((data) => {
+        const usuarios = data;
+        const user = usuarios.find(u => u.nom_usuari === nom_usuari && u.contrasenya === contrasenya);
+        if(user){
+            verify = true;
+        }
+        res.json({verify})
+        
+    })
+    .catch((err) => {
+        console.log(err);
+    })
+
+});
+//Recogemos los tipos de productos que ofrecemos
+app.get("/getTipos", (req, res) => {
+    GetTipos()
+    .then((data) => {
+        const tipos = data;
+        res.json(tipos);
+    })
+    .catch((err) => {
+        console.log(err);
+    });
+})
 //Recogemos los productos de nuestra base de datos
 app.get("/getProductes", (req, res) => {
-    queries()
+    GetProducts()
         .then((data) => {
             const productes = data;
             res.json(productes);
@@ -131,21 +223,21 @@ app.post("/postProductes", (req, res) => {
     const nombre = productObject.nombre;
     const precio = productObject.precio;
     const descripcion = productObject.descripcion;
-    const disponibilidad = productObject.disponibilidad;
-    const tipo_id = productObject.tienda_id;
+    const tipo_id = productObject.tipo_id;
     const tienda_id = productObject.tienda_id;
     const fotos = productObject.fotos;
-    insert(nombre, precio, descripcion, disponibilidad, tipo_id, tienda_id, fotos);
+    const stock = productObject.stock;
+
+    InsertProducts(nombre, precio, descripcion, tipo_id, tienda_id, fotos, stock);
+    saveImage(fotos);
     res.json(productObject);
 });
 //Eliminamos un producto seleccionando su id
 app.delete("/delete/:id",(req ,res) =>{
-    console.log("Entre");
     const idSelected = parseInt(req.params.id);
-    console.log(idSelected);
-    deleteProduct(idSelected);
+    DeleteProduct(idSelected);
 });
-//Modificamos un producto con seleccionando su id
+//Modificamos un producto seleccionando su id
 app.put("/putProductes/:id",(req, res) => {
     const idSelected = parseInt(req.params.id);
     const productObject = req.body;
@@ -153,11 +245,12 @@ app.put("/putProductes/:id",(req, res) => {
     const nombre = productObject.nombre;
     const precio = productObject.precio;
     const descripcion = productObject.descripcion;
-    const disponibilidad = productObject.disponibilidad;
-    const tipo_id = productObject.tienda_id;
+    const tipo_id = productObject.tipo_id;
     const tienda_id = productObject.tienda_id;
     const fotos = productObject.fotos;
-    update(idSelected, nombre, precio, descripcion, disponibilidad, tipo_id, tienda_id, fotos)
+    const stock = productObject.stock;
+
+    UpdateProducts(idSelected, nombre, precio, descripcion, tipo_id, tienda_id, fotos, stock);
     res.json(productObject);
 });
 

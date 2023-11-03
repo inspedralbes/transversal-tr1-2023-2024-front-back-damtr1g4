@@ -33,20 +33,16 @@ function GetConnection() {
 }
 
 //Usuarios
-function GetUsuarios(user) {
+function GetUsuarios(nom_usuari) {
     return new Promise(async (resolve, reject) => {
-        if (user === undefined) {
-            // Si nombreUsuario es undefined, cambialo a null o maneja el caso apropiadamente
-            user = null;
-        }
-
         const connection = await GetConnection();
         var sql = "SELECT nom_usuari, cognoms_usuari, contrasenya, correu_electronic, numero_targeta, data_caducitat, cvv FROM usuaris WHERE nom_usuari = ?;";
-        connection.execute(sql, [user], function (err, result) {
+        connection.execute(sql, [nom_usuari], function (err, result) { // Pasa nom_usuari como argumento en la consulta SQL
             if (err) {
                 reject(err);
             } else {
                 connection.release();
+                console.log(result);
                 resolve(result);
             }
         });
@@ -179,23 +175,22 @@ app.listen(PORT, () => {
     console.log("Server  =>" + PORT);
 });
 //Verificamos que el usuario este en la base de datos y devolvemos un booleano en formato Json
-app.post("/verify/:nom_usuari/:contrasenya",(req, res) =>{
-    const {nom_usuari, contrasenya} = req.params;
-    let verify = false; 
-    GetUsuarios()
-    .then((data) => {
-        const usuarios = data;
-        const user = usuarios.find(u => u.nom_usuari === nom_usuari && u.contrasenya === contrasenya);
-        if(user){
-            verify = true;
-        }
-        res.json({verify})
-        
-    })
-    .catch((err) => {
-        console.log(err);
-    })
-
+app.post("/verify/:nom_usuari/:contrasenya", (req, res) => {
+    const { nom_usuari, contrasenya } = req.params;
+    let verify = false;
+    GetUsuarios(nom_usuari) // Pasa el nombre de usuario como argumento
+        .then((data) => {
+            const usuarios = data;
+            const user = usuarios.find(u => u.nom_usuari === nom_usuari && u.contrasenya === contrasenya);
+            if (user) {
+                verify = true;
+            }
+            console.log(verify);
+            res.json({ verify });
+        })
+        .catch((err) => {
+            console.log(err);
+        });
 });
 app.get("/getUsuarios", (req, res) => {
     const user = req.query.user; // Obtener el valor de nombreUsuario de los parámetros de consulta

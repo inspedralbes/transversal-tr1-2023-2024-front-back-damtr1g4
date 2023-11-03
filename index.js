@@ -175,8 +175,8 @@ app.listen(PORT, () => {
     console.log("Server  =>" + PORT);
 });
 //Verificamos que el usuario este en la base de datos y devolvemos un booleano en formato Json
-app.post("/verify/:nom_usuari/:contrasenya", (req, res) => {
-    const { nom_usuari, contrasenya } = req.params;
+app.post("/verify", (req, res) => {
+    const { nom_usuari, contrasenya } = req.body;
     let verify = false;
     GetUsuarios(nom_usuari) // Pasa el nombre de usuario como argumento
         .then((data) => {

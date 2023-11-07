@@ -1,6 +1,6 @@
 <template>
     <v-layout class="rounded rounded-md" :align="'center'">
-        <v-app-bar :elevation="24" :align="'start'">
+        <v-app-bar :elevation="24" :align="'start'" class="custom-app-bar">
             <v-row>
                 <router-link :to="'/'">
                     <v-btn color="black" class="ml-5" elevation="6" large @click="">
@@ -70,78 +70,87 @@
             <v-row>
                 <v-col v-for="producto in productosFiltrados" :key="producto.id" cols="12" sm="6" md="4" lg="4">
                     <br>
-                    <v-card width="400" height="635" :class="'card'">
-                        <!-- ACTIVAR / DES -->
-                        <div class="toggle-border" icon @click="toggleProduct(producto)">
-                            <input :id="'toggle-' + producto.id" type="checkbox" :checked="producto.isActive">
-                            <label :for="'toggle-' + producto.id">
-                                <div class="handle"></div>
-                            </label>
-                        </div>
-                        <!-- ACTIVAR / DES -->
-                        <v-img :src="'../' + producto.fotos" width="400" height="400" alt="Imagen del tipo"
-                            class="img-resize"></v-img>
-                        <v-card-title class="nom">{{ producto.nombre }}</v-card-title>
-                        <v-card-text class="preu">{{ producto.precio }}€</v-card-text>
-                        <v-card-text class="dispo">Stock: {{ producto.stock }}</v-card-text>
-                        <!-- EDITAR -->
-                        <v-row justify="center">
-                            <v-dialog v-model="dialog" persistent width="1024">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn elevation="6" width="90" class="mr-4" v-bind="props"
-                                        @click="editProduct(producto.id)">
-                                        Editar
-                                    </v-btn>
-                                    <v-btn elevation="6" width="90" v-model="selectedProduct.id"
-                                        @click="eliminarProducto(producto.id)">Eliminar</v-btn>
-                                </template>
-                                <v-card>
-                                    <v-card-title>
-                                        <span class="text-h5">Editando Producto</span>
-                                    </v-card-title>
-                                    <v-card-text>
-                                        <v-container>
-                                            <v-row>
-                                                <v-col cols="12" sm="6" md="4">
-                                                    <v-text-field label="Nombre de la planta*"
-                                                        v-model="selectedProduct.nombre" required></v-text-field>
-                                                </v-col>
-                                                <v-col cols="12" sm="6" md="4">
-                                                    <VTextField label="Precio*" v-model="selectedProduct.precio"
-                                                        hint="añade el precio de la planta" required></VTextField>
-                                                </v-col>
-                                                <v-col cols="12" sm="6" md="4">
-                                                    <v-text-field label="Img*" v-model="selectedProduct.fotos"
-                                                        hint="añade el src de la foto" persistent-hint
-                                                        required></v-text-field>
-                                                </v-col>
-                                                <v-col cols="12">
-                                                    <VTextField label="Descripción" v-model="selectedProduct.descripcion"
-                                                        hint="añade la descripción de la planta"></VTextField>
-                                                </v-col>
-                                                <v-col cols="12" sm="6">
-                                                    <v-text-field label="Stock*" v-model="selectedProduct.stock"
-                                                        hint="añade la cantidad de Stock*" persistent-hint
-                                                        required></v-text-field>
-                                                </v-col>
-                                            </v-row>
-                                        </v-container>
-                                        <small>*campos obligatorios</small>
-                                    </v-card-text>
-                                    <v-card-actions>
-                                        <v-spacer></v-spacer>
-                                        <v-btn color="green" variant="text" @click="dialog = false">
-                                            Cerrar
+                    <v-card class="card" width="440" height="750">
+                        <v-card width="400" height="690" class="heading" elevation="24">
+                            <!-- ACTIVAR / DES -->
+                            <div class="toggle-border" icon @click="toggleProduct(producto)">
+                                <input :id="'toggle-' + producto.id" type="checkbox" :checked="producto.isActive">
+                                <label :for="'toggle-' + producto.id">
+                                    <div class="handle"></div>
+                                </label>
+                            </div>
+                            <!-- ACTIVAR / DES -->
+                            <v-img :src="'../' + producto.fotos" width="400" height="400" alt="Imagen del tipo"
+                                class="img-resize"></v-img>
+                            <v-card-title class="nom">{{ producto.nombre }}</v-card-title>
+                            <v-card-text class="preu">{{ producto.precio }}€</v-card-text>
+                            <v-card-text class="dispo">Stock: {{ producto.stock }}</v-card-text>
+                            <!-- EDITAR -->
+                            <v-row justify="center">
+                                <v-dialog v-model="dialog" persistent width="1024">
+                                    <template v-slot:activator="{ props }">
+                                        <v-btn elevation="6" width="90" class="mr-4 btn-edit" v-bind="props"
+                                            @click="editProduct(producto.id)">
+                                            Editar
                                         </v-btn>
-                                        <v-btn color="green" variant="text" @click="updateProductEditar(producto)">
-                                            Guardar
+                                        <v-btn class="tooltip btnEliminar" elevation="6" width="90"
+                                            v-model="selectedProduct.id" @click="eliminarProducto(producto.id)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20"
+                                                height="25" width="25">
+                                                <path fill="#6361D9"
+                                                    d="M8.78842 5.03866C8.86656 4.96052 8.97254 4.91663 9.08305 4.91663H11.4164C11.5269 4.91663 11.6329 4.96052 11.711 5.03866C11.7892 5.11681 11.833 5.22279 11.833 5.33329V5.74939H8.66638V5.33329C8.66638 5.22279 8.71028 5.11681 8.78842 5.03866ZM7.16638 5.74939V5.33329C7.16638 4.82496 7.36832 4.33745 7.72776 3.978C8.08721 3.61856 8.57472 3.41663 9.08305 3.41663H11.4164C11.9247 3.41663 12.4122 3.61856 12.7717 3.978C13.1311 4.33745 13.333 4.82496 13.333 5.33329V5.74939H15.5C15.9142 5.74939 16.25 6.08518 16.25 6.49939C16.25 6.9136 15.9142 7.24939 15.5 7.24939H15.0105L14.2492 14.7095C14.2382 15.2023 14.0377 15.6726 13.6883 16.0219C13.3289 16.3814 12.8414 16.5833 12.333 16.5833H8.16638C7.65805 16.5833 7.17054 16.3814 6.81109 16.0219C6.46176 15.6726 6.2612 15.2023 6.25019 14.7095L5.48896 7.24939H5C4.58579 7.24939 4.25 6.9136 4.25 6.49939C4.25 6.08518 4.58579 5.74939 5 5.74939H6.16667H7.16638ZM7.91638 7.24996H12.583H13.5026L12.7536 14.5905C12.751 14.6158 12.7497 14.6412 12.7497 14.6666C12.7497 14.7771 12.7058 14.8831 12.6277 14.9613C12.5495 15.0394 12.4436 15.0833 12.333 15.0833H8.16638C8.05588 15.0833 7.94989 15.0394 7.87175 14.9613C7.79361 14.8831 7.74972 14.7771 7.74972 14.6666C7.74972 14.6412 7.74842 14.6158 7.74584 14.5905L6.99681 7.24996H7.91638Z"
+                                                    clip-rule="evenodd" fill-rule="evenodd"></path>
+                                            </svg>
                                         </v-btn>
-                                    </v-card-actions>
-                                </v-card>
-                            </v-dialog>
-                        </v-row>
-                        <!-- FIN EDITAR -->
-
+                                    </template>
+                                    <v-card>
+                                        <v-card-title>
+                                            <span class="text-h5">Editando Producto</span>
+                                        </v-card-title>
+                                        <v-card-text>
+                                            <v-container>
+                                                <v-row>
+                                                    <v-col cols="12" sm="6" md="4">
+                                                        <v-text-field label="Nombre de la planta*"
+                                                            v-model="selectedProduct.nombre" required></v-text-field>
+                                                    </v-col>
+                                                    <v-col cols="12" sm="6" md="4">
+                                                        <VTextField label="Precio*" v-model="selectedProduct.precio"
+                                                            hint="añade el precio de la planta" required></VTextField>
+                                                    </v-col>
+                                                    <v-col cols="12" sm="6" md="4">
+                                                        <v-text-field label="Img*" v-model="selectedProduct.fotos"
+                                                            hint="añade el src de la foto" persistent-hint
+                                                            required></v-text-field>
+                                                    </v-col>
+                                                    <v-col cols="12">
+                                                        <VTextField label="Descripción"
+                                                            v-model="selectedProduct.descripcion"
+                                                            hint="añade la descripción de la planta"></VTextField>
+                                                    </v-col>
+                                                    <v-col cols="12" sm="6">
+                                                        <v-text-field label="Stock*" v-model="selectedProduct.stock"
+                                                            hint="añade la cantidad de Stock*" persistent-hint
+                                                            required></v-text-field>
+                                                    </v-col>
+                                                </v-row>
+                                            </v-container>
+                                            <small>*campos obligatorios</small>
+                                        </v-card-text>
+                                        <v-card-actions>
+                                            <v-spacer></v-spacer>
+                                            <v-btn color="green" variant="text" @click="dialog = false">
+                                                Cerrar
+                                            </v-btn>
+                                            <v-btn color="green" variant="text" @click="updateProductEditar(producto)">
+                                                Guardar
+                                            </v-btn>
+                                        </v-card-actions>
+                                    </v-card>
+                                </v-dialog>
+                            </v-row>
+                            <!-- FIN EDITAR -->
+                        </v-card>
                     </v-card>
                 </v-col>
             </v-row>
@@ -379,7 +388,7 @@ export default {
             // PRODUCTOS
             getProductos().then((response) => {
                 this.productos = response.map((producto) => ({ ...producto }));
-                console.log(response);
+                //console.log(response);
             }).catch((error) => {
                 console.error("Error al obtener productos: ", error);
             });
@@ -387,7 +396,7 @@ export default {
             // TIPOS DE PRODUCTOS
             getTipos().then((response) => {
                 this.tipos = response;
-                console.log(response);
+                //console.log(response);
             }).catch((error) => {
                 console.error("Error al obtener tipos: ", error);
             });
@@ -415,25 +424,176 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
+.btnEliminar {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1em;
+    border: 0px solid transparent;
+    background-color: rgba(100, 77, 237, 0.08);
+    border-radius: 1.25em;
+    transition: all 0.2s linear;
+}
+
+.btnEliminar:hover {
+    box-shadow: 3.4px 2.5px 4.9px rgba(0, 0, 0, 0.025),
+        8.6px 6.3px 12.4px rgba(0, 0, 0, 0.035),
+        17.5px 12.8px 25.3px rgba(0, 0, 0, 0.045),
+        36.1px 26.3px 52.2px rgba(0, 0, 0, 0.055),
+        99px 72px 143px rgba(0, 0, 0, 0.08);
+}
+
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 4em;
+    background-color: rgba(0, 0, 0, 0.253);
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    top: 25%;
+    left: 110%;
+}
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    margin-top: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent rgba(0, 0, 0, 0.253) transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+
+.custom-app-bar {
+    padding: 10px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.container {
+    width: 100%;
+    height: 100%;
+    --s: 82px;
+    --c1: #b2b2b2;
+    --c2: #ffffff;
+    --c3: #d9d9d9;
+
+    --_g: var(--c3) 0 120deg, #0000 0;
+    background: conic-gradient(from -60deg at 50% calc(100% / 3), var(--_g)),
+        conic-gradient(from 120deg at 50% calc(200% / 3), var(--_g)),
+        conic-gradient(from 60deg at calc(200% / 3),
+            var(--c3) 60deg,
+            var(--c2) 0 120deg,
+            #0000 0),
+        conic-gradient(from 180deg at calc(100% / 3), var(--c1) 60deg, var(--_g)),
+        linear-gradient(90deg,
+            var(--c1) calc(100% / 6),
+            var(--c2) 0 50%,
+            var(--c1) 0 calc(500% / 6),
+            var(--c2) 0);
+    background-size: calc(1.732 * var(--s)) var(--s);
+}
+
+/* Estilos para los productos */
 .card {
-    width: 190px;
-    height: 254px;
     border-radius: 30px;
     background: #e0e0e0;
-    box-shadow: 15px 15px 30px #bebebe,
-        -15px -15px 30px #ffffff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    margin: 20px;
+}
+
+.heading {
+    border-radius: 30px;
+    background: #ffffff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 20px 20px 60px #bebebe, -20px -20px 60px #cacaca;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    margin: 20px;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    left: -5px;
+    margin: auto;
+    width: 200px;
+    height: 264px;
+    border-radius: 10px;
+    background: linear-gradient(-45deg, #e81cff 0%, #40c9ff 100%);
+    z-index: -10;
+    pointer-events: none;
+    transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.card::after {
+    content: "";
+    z-index: -1;
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(-45deg, #fc00ff 0%, #00dbde 100%);
+    transform: translate3d(0, 0, 0) scale(0.95);
+    filter: blur(20px);
+}
+
+/* Estilos para el botón de editar */
+.btn-edit {
+    padding: 12.5px 30px;
+    border: 0;
+    border-radius: 100px;
+    background-color: #2ba8fb;
+    color: white;
+    border: none;
+    font-weight: Bold;
+    transition: all 0.5s;
+    -webkit-transition: all 0.5s;
 }
 
 .btn-edit:hover {
-    background-color: green;
-    color: white;
+    background-color: #6fc5ff;
+    box-shadow: 0 0 20px #6fc5ff50;
+    transform: scale(1.1);
 }
 
-.preu {
-    font: oblique bold 120% cursive;
+button:active {
+    background-color: #3d94cf;
+    transition: all 0.25s;
+    -webkit-transition: all 0.25s;
+    box-shadow: none;
+    transform: scale(0.98);
+}
 
-    color: rgb(53, 207, 22);
+/* Estilos para el precio */
+.preu {
+    font-weight: bold;
+    font-size: 16px;
+    color: #2ba8fb;
 }
 
 .nom:hover {
@@ -494,3 +654,4 @@ export default {
     left: calc(100% - 35px + 10px);
 }
 </style>
+

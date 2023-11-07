@@ -13,6 +13,7 @@ var con = mysql.createPool({
   database: "a22polazasot_baseTienda"
 });
 
+// CORS
 app.use(cors({
   origin: function (origin, callback) {
     return callback(null, true);
@@ -109,7 +110,6 @@ function updateProductStatusTotalHachis(isActive) {
     });
   });
 }
-
 
 // Modificar todos de golpe (ACCESORIOS)
 function updateProductStatusTotalAccesorios(isActive) {
@@ -262,6 +262,52 @@ function eliminarProducto(productId) {
       }
     });
   });
+}
+
+// Obtener comandas
+function obtenerComandas() {
+  return new Promise((resolve, reject) => {
+    const sql = `
+        SELECT c.id_comanda, c.id_usuari, c.preu, c.data, c.hora, cp.id_producte, cp.quantitat
+        FROM comandes c
+        LEFT JOIN comandes_productes cp ON c.id_comanda = cp.id_comanda
+    `;
+
+    con.query(sql, (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        const comandes = {};
+        result.forEach((row) => {
+          const key = `${row.id_comanda}-${row.id_usuari}`;
+          if (!comandes[key]) {
+            comandes[key] = { 
+              id_comanda: row.id_comanda, 
+              id_usuari: row.id_usuari, 
+              preu: row.preu, 
+              data: formatFecha(row.data), // Formatear la fecha
+              hora: row.hora,
+              productes: [] };
+          }
+          if (row.id_producte !== null && row.quantitat !== null) {
+            comandes[key].productes.push({ id_producte: row.id_producte, quantitat: row.quantitat });
+          }
+        });
+
+        const comandesArray = Object.values(comandes);
+        resolve(comandesArray);
+      }
+    });
+  });
+}
+
+// Función para formatear la fecha
+function formatFecha(fecha) {
+  const date = new Date(fecha);
+  const dia = date.getDate();
+  const mes = date.getMonth() + 1; // Sumar 1 al mes porque en JavaScript los meses empiezan en 0
+  const año = date.getFullYear();
+  return `${dia}-${mes}-${año}`;
 }
 
 //Conexcion con el servidor
@@ -421,7 +467,7 @@ app.post('/verificarProducto', (req, res) => {
 
   verificarPedidosRelacionadosEnBaseDeDatos(productId)
     .then((tienePedidosRelacionados) => {
-     //console.log(`tienePedidosRelacionados: ${tienePedidosRelacionados}`);
+      //console.log(`tienePedidosRelacionados: ${tienePedidosRelacionados}`);
       let puedeEliminar;
       if (tienePedidosRelacionados) {
         puedeEliminar = false;
@@ -448,5 +494,17 @@ app.post('/eliminarProducto', (req, res) => {
     .catch((error) => {
       console.error('Error al eliminar el producto en la base de datos:', error);
       res.status(500).json({ error: 'Error al eliminar el producto' });
+    });
+});
+
+// Ruta para obtener comandas
+app.get("/getComandes", (req, res) => {
+  obtenerComandas()
+    .then((comandasArray) => {
+      res.send(comandasArray);
+    })
+    .catch((error) => {
+      console.error("Error al obtener comandas desde la base de datos:", error);
+      res.status(500).json({ error: "Error al obtener comandas" });
     });
 });

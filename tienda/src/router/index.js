@@ -24,6 +24,13 @@ const routes = [
     path: '/Hachis/',
     component: () => import('@/components/Hachis.vue'),
   },
+
+  // COMANDES
+  {
+    path: '/recepcioComandes/',
+    name: "recepcioComandes",
+    component: () => import('@/components/recepcioComandes.vue'),
+  },
 ]
 
 const router = createRouter({
